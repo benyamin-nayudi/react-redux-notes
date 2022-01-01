@@ -1,79 +1,106 @@
-const redux = require('redux')
-
-// first we require the reduxLogger function from redux-logger node package
-const reduxLogger = require('redux-logger')
-
+const  redux = require('redux')
 const createStore = redux.createStore
-const combineReducers = redux.combineReducers
-
-// now we get the createLogger instance from the reduxLogger to apply it 
-const logger = reduxLogger.createLogger()
-// and then we get the applyMiddleware function from redux
 const applyMiddleware = redux.applyMiddleware
+const thunkMiddleware = require('redux-thunk').default
+const axios = require('axios')
 
 
 
-const BUY_CAKE = 'BUY_CAKE'
-const BUY_ICECREAM = 'BUY_ICECREAM'
+//state
+const initialState = {
+    loading: false , 
+    users : [] , 
+    error : ''
+}
 
-const buyCake = () =>{
+
+// actions
+const FETCH_USERS_REQUEST = 'FETCH_USERS_REQUEST'
+const FETCH_USERS_SUCCESS = 'FETCH_USERS_SUCCESS'
+const FETCH_USERS_FAILURE =  'FETCH_USERS_FAILURE'
+
+
+const fetchUsersRequest = () =>{
     return {
-        type: BUY_CAKE,
-        info: 'first redux action'
+        type : FETCH_USERS_REQUEST
     }
 }
 
-const buyIceCream = () =>{
+const fetchUsersSuccess = (users) =>{
     return {
-        type: BUY_ICECREAM
+        type : FETCH_USERS_SUCCESS,
+        payload: users
     }
 }
 
 
-const initialCakeState = {
-    numOfCake : 10
+const fetchUsersFailure = error =>{
+    return {
+        type : fetchUsersFailure , 
+        payload: error
+    }
 }
 
-const initialIceCreamState = {
-    numOfCake : 20
-}
 
 
 
-const cakeReducer = (state = initialCakeState , action) =>{
+const reducer = (state = initialState , action) =>{
+
     switch(action.type){
-        case BUY_CAKE:
-            return { ...state , numOfCake: state.numOfCake - 1}
-        default : 
-        return state
+        case FETCH_USERS_REQUEST :
+            return {
+                ...state , loading: true
+            }
+
+        case FETCH_USERS_SUCCESS :
+            return {loading : false , users: action.payload , error : ''}
+
+        case FETCH_USERS_FAILURE:
+            return {
+                loading: false , 
+                users: [] , 
+                error : action.payload
+            }
+        default: 
+            return state
     }
 }
 
-const iceCreamReducer = (state = initialIceCreamState , action) =>{
-    switch(action.type){
-        case BUY_ICECREAM:
-            return { ...state , numOfIceCream: state.numOfIceCream - 1}
-        default : 
-        return state
+
+const fetchUsers = () =>{
+
+    return function (dispatch){
+        
+        // in this step we fire a dispatch giving the fetchUsersRequest action to it. this action will be get by the reducer and set the loading property to true
+        dispatch(fetchUsersRequest()) 
+        
+        
+        // then we asynchronously make an api call with axios  
+        axios.get('https://jsonplaceholder.typicode.com/users')
+            .then(res =>{
+                const users = res.data.map(user => user.id )
+
+                // in the then method we dispatch fetchUserSuccess action giving the user's id as a argument, then the reducer will set the users array to the ids
+                dispatch(fetchUsersSuccess(users))
+            }).catch(err =>{
+
+                // to handle errors we dispatch the fetchUsersFailure giving the error message to it
+                dispatch(fetchUsersFailure(err.message))
+            })
     }
 }
 
+// the thunk middleware allows the actionCreator to returns a function instead of an action. in this case you can get the dispatch method as its argument and dispatch any action while fetching the data like this: 
+const store = createStore(reducer , applyMiddleware(thunkMiddleware))
 
-const rootReducer = combineReducers({
-    cake : cakeReducer , 
-    iceCream : iceCreamReducer
-})
+store.subscribe(() => {console.log(store.getState())})
+
+// here we dispatch the fetchUsers action 
+store.dispatch(fetchUsers())
 
 
-// here we pass the middleware to the store by passing it to the applyMiddleware function . this logger npm logs everything about the changes in the state 
-const store = createStore(rootReducer , applyMiddleware(logger))
-console.log('initial state'  , store.getState())
-const unsubscribe = store.subscribe(()=> {})
 
-store.dispatch(buyCake())
-store.dispatch(buyCake())
-store.dispatch(buyCake())
-store.dispatch(buyIceCream())
-store.dispatch(buyIceCream())
-unsubscribe()
+
+
+
 
