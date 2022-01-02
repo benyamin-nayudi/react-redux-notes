@@ -1,10 +1,4 @@
-### React Redux + hooks
-> they allows you to subscribe to the store and dispatch actions without need tot connect()
+### middleware : redux-logger 
+> is is basically a function that logs information related to the redux store.
 
-
-## useSelector() : it is a hook that react-redux provides that acts similarly to mapStateToProps function.
-
-
-## useDispatch() : it is a hook that dispatches an action .
-
-
+applied in store.js
