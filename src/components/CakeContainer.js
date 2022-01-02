@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import {buyCake} from './redux'
 
 function CakeContainer(props) {
+    // then here we can access the states and dispatchers via props
     console.log(props)
     return (
         <div>
@@ -19,6 +20,7 @@ const mapStateToProps = (state) =>{
     }
 }
 
+// we use mapDispatchToProps function to access the actionCreators and dispatch function. it takes the dispatch argument as a parameter and we can assign an object like this defining property and method to execute
 const mapDispatchToProps = (dispatch) =>{
     return {
         buyCake : ()=> dispatch(buyCake())
